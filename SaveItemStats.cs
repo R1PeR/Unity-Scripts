@@ -51,15 +51,18 @@ public class SaveItemStats : MonoBehaviour
 {
     [SerializeField] private Player player;
     [SerializeField] private Ground ground;
-    [SerializeField] private Storage storage;
+    [SerializeField] private Storage storageOne;
+    [SerializeField] private Storage storageTwo;
     [SerializeField] private GameObjectWithPath gameObjectPath = new GameObjectWithPath();
-    public string tagToSave;
+    public string tagToSave = "Item";
     public Transform transformPlayer;
-    public Transform transformStorage;
+    public Transform transformStorageOne;
+    public Transform transformStorageTwo;
     private GameObject[] inScene;  
     private readonly string FILE_NAME_PLAYER = "playeritems.json";
     private readonly string FILE_NAME_GROUND = "levelitems.json";
-    private readonly string FILE_NAME_STORAGE = "storageitems.json";
+    private readonly string FILE_NAME_STORAGE_ONE = "storageone.json";
+    private readonly string FILE_NAME_STORAGE_TWO = "storagetwo.json";
     //System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
     private int idOfItem = 0;
     private float time;
@@ -70,6 +73,7 @@ public class SaveItemStats : MonoBehaviour
 #if UNITY_EDITOR
     public void BuildGameobjectDatabase()
     {
+        DeleteDatabase();
         GameObject[] go = Resources.LoadAll<GameObject>("/");
         foreach (GameObject g in go)
         {
@@ -85,16 +89,30 @@ public class SaveItemStats : MonoBehaviour
 #endif
 #endregion
     public void Save() {
+#if UNITY_EDITOR
+        if(transformPlayer == null || transformStorageOne == null || transformStorageTwo == null)
+        {
+            throw new System.NullReferenceException("Weź no przypisz te transformy :'(");
+        }
+#endif
+#if UNITY_EDITOR
+        if (tagToSave == null || tagToSave == "")
+        {
+            throw new System.NullReferenceException("Weź no przypisz tag do zapisywania :'(");
+        }
+#endif
         //sw.Reset();
         //sw.Start();
         idOfItem = 0;
         GetItems();
         AddItems(player.items,transformPlayer);
         AddItems(ground.items);
-        AddItems(storage.items, transformPlayer);
+        AddItems(storageOne.items, transformStorageOne);
+        AddItems(storageTwo.items, transformStorageTwo);
         WriteToFile(JsonUtility.ToJson(player), FILE_NAME_PLAYER);
         WriteToFile(JsonUtility.ToJson(ground), FILE_NAME_GROUND);
-        WriteToFile(JsonUtility.ToJson(storage), FILE_NAME_STORAGE);
+        WriteToFile(JsonUtility.ToJson(storageOne), FILE_NAME_STORAGE_ONE);
+        WriteToFile(JsonUtility.ToJson(storageTwo), FILE_NAME_STORAGE_TWO);
         //sw.Stop();
         //textOutput.text = "Save time: " + sw.Elapsed.Milliseconds + "ms";
     }
@@ -105,7 +123,8 @@ public class SaveItemStats : MonoBehaviour
         GetItems();
         player = JsonUtility.FromJson<Player>(ReadFromFile(FILE_NAME_PLAYER));
         ground = JsonUtility.FromJson<Ground>(ReadFromFile(FILE_NAME_GROUND));
-        storage = JsonUtility.FromJson<Storage>(ReadFromFile(FILE_NAME_STORAGE));
+        storageOne = JsonUtility.FromJson<Storage>(ReadFromFile(FILE_NAME_STORAGE_ONE));
+        storageTwo = JsonUtility.FromJson<Storage>(ReadFromFile(FILE_NAME_STORAGE_TWO));
         RespawnItems();
         //sw.Stop();
         //textOutput.text = "Load time: " + sw.Elapsed.Milliseconds + "ms";
@@ -139,7 +158,25 @@ public class SaveItemStats : MonoBehaviour
                 Debug.Log("Nie można załadować: " + i.name);
             }
         }
-        foreach (Item i in storage.items)
+        foreach (Item i in storageOne.items)
+        {
+            if (i.pathToPrefab != null)
+            {
+                if (i.parent == "null")
+                {
+                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation);
+                }
+                else
+                {
+                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
+                }
+            }
+            else
+            {
+                Debug.Log("Nie można załadować: " + i.name);
+            }
+        }
+        foreach (Item i in storageTwo.items)
         {
             if (i.pathToPrefab != null)
             {
@@ -166,6 +203,12 @@ public class SaveItemStats : MonoBehaviour
         inScene = GameObject.FindGameObjectsWithTag(tagToSave);
     }
     void AddItems (List<Item> list, Transform parent = null) {
+#if UNITY_EDITOR
+        if(gameObjectPath.Count == 0 || gameObjectPath == null)
+        {
+            throw new System.NullReferenceException("Weź no zbuduj tą baze danych :'(");
+        }
+#endif
         list.Clear();
         string path = "none";
         int index;
