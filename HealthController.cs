@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class HealthController : MonoBehaviour {
+    public float maxHealth = 100;
     private float _health = 100;
     private bool _isDead = false;
     public GameObject screenToActivate;
@@ -21,9 +22,6 @@ public class HealthController : MonoBehaviour {
         if (GetDead()) {
             screenToActivate.SetActive(true);
         }
-        //debug
-        ApplyDamage(Time.deltaTime*10);
-        //Debug.Log(GetHealth());
 	}
 
     public float GetHealth() {
@@ -33,7 +31,7 @@ public class HealthController : MonoBehaviour {
     {
         _health = health;
     }
-    public void ApplyDamage(float damage) {
+    public void AddDamage(float damage) {
         if ((_health -= damage) < 0)
         {
             _health = 0.0f;
@@ -42,6 +40,18 @@ public class HealthController : MonoBehaviour {
             _health -= damage;
         }
         
+    }
+    public void AddHealth(float health)
+    {
+        if ((_health += health) > maxHealth)
+        {
+            _health = maxHealth;
+        }
+        else
+        {
+            _health += health;
+        }
+
     }
     public bool GetDead(){
         return _isDead;
