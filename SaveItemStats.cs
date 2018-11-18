@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using SerializableCollections;
 
 /* Jak używać:
+ * Dodaj na obiekt, który jest w każdej scenie, testowane na kamerze
  * Save() - Automatycznie zapisuje każdy przedmiot z tagiem tagToSave
  * Load() - Automatycznie ładuje przedmioty zapisane w jsonie
  * Przed zapisaniem użyć BuildGameobjectDatabase() by zbudować baze danych prefabów do ładowania
@@ -50,19 +51,25 @@ public class ExtendedSerializableDictionaryPropertyDrawer : SerializableDictiona
 public class SaveItemStats : MonoBehaviour
 {
     [SerializeField] private Player player;
-    [SerializeField] private Ground ground;
-    [SerializeField] private Storage storageOne;
-    [SerializeField] private Storage storageTwo;
+    [SerializeField] private ItemList ground;
+    [SerializeField] private ItemList pouch;
+    [SerializeField] private ItemList backpack;
     [SerializeField] private GameObjectWithPath gameObjectPath = new GameObjectWithPath();
     public string tagToSave = "Item";
-    public Transform transformPlayer;
-    public Transform transformStorageOne;
-    public Transform transformStorageTwo;
+    public Transform transformControllerLeft;
+    public Transform transformControllerRight;
+    public Transform transformWaistLeft;
+    public Transform transformWaistBack;
+    public Transform transformWaistRight;
+    public Transform transformLegLeft;
+    public Transform transformLegRight;
+    public Transform transformPouch;
+    public Transform transformBackpack;
     private GameObject[] inScene;  
     private readonly string FILE_NAME_PLAYER = "playeritems.json";
     private readonly string FILE_NAME_GROUND = "levelitems.json";
-    private readonly string FILE_NAME_STORAGE_ONE = "storageone.json";
-    private readonly string FILE_NAME_STORAGE_TWO = "storagetwo.json";
+    private readonly string FILE_NAME_POUCH = "pouchitems.json";
+    private readonly string FILE_NAME_BACKPACK = "backpackitems.json";
     //System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
     private int idOfItem = 0;
     private float time;
@@ -90,7 +97,7 @@ public class SaveItemStats : MonoBehaviour
 #endregion
     public void Save() {
 #if UNITY_EDITOR
-        if(transformPlayer == null || transformStorageOne == null || transformStorageTwo == null)
+        if(transformWaistLeft == null || transformPouch == null || transformBackpack == null)
         {
             throw new System.NullReferenceException("Weź no przypisz te transformy :'(");
         }
@@ -105,14 +112,20 @@ public class SaveItemStats : MonoBehaviour
         //sw.Start();
         idOfItem = 0;
         GetItems();
-        AddItems(player.items,transformPlayer);
+        AddItems(player.controllerLeft,transformControllerLeft);
+        AddItems(player.controllerRight, transformControllerRight);
+        AddItems(player.waistRight, transformWaistRight);
+        AddItems(player.waistBack, transformWaistBack);
+        AddItems(player.waistLeft, transformWaistLeft);
+        AddItems(player.legRight, transformLegRight);
+        AddItems(player.legLeft, transformLegLeft);
         AddItems(ground.items);
-        AddItems(storageOne.items, transformStorageOne);
-        AddItems(storageTwo.items, transformStorageTwo);
+        AddItems(pouch.items, transformPouch);
+        AddItems(backpack.items, transformBackpack);
         WriteToFile(JsonUtility.ToJson(player), FILE_NAME_PLAYER);
         WriteToFile(JsonUtility.ToJson(ground), FILE_NAME_GROUND);
-        WriteToFile(JsonUtility.ToJson(storageOne), FILE_NAME_STORAGE_ONE);
-        WriteToFile(JsonUtility.ToJson(storageTwo), FILE_NAME_STORAGE_TWO);
+        WriteToFile(JsonUtility.ToJson(pouch), FILE_NAME_POUCH);
+        WriteToFile(JsonUtility.ToJson(backpack), FILE_NAME_BACKPACK);
         //sw.Stop();
         //textOutput.text = "Save time: " + sw.Elapsed.Milliseconds + "ms";
     }
@@ -122,9 +135,9 @@ public class SaveItemStats : MonoBehaviour
         //sw.Start();
         GetItems();
         player = JsonUtility.FromJson<Player>(ReadFromFile(FILE_NAME_PLAYER));
-        ground = JsonUtility.FromJson<Ground>(ReadFromFile(FILE_NAME_GROUND));
-        storageOne = JsonUtility.FromJson<Storage>(ReadFromFile(FILE_NAME_STORAGE_ONE));
-        storageTwo = JsonUtility.FromJson<Storage>(ReadFromFile(FILE_NAME_STORAGE_TWO));
+        ground = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_GROUND));
+        pouch = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_POUCH));
+        backpack = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_BACKPACK));
         RespawnItems();
         //sw.Stop();
         //textOutput.text = "Load time: " + sw.Elapsed.Milliseconds + "ms";
@@ -158,7 +171,7 @@ public class SaveItemStats : MonoBehaviour
                 Debug.Log("Nie można załadować: " + i.name);
             }
         }
-        foreach (Item i in storageOne.items)
+        foreach (Item i in pouch.items)
         {
             if (i.pathToPrefab != null)
             {
@@ -176,7 +189,7 @@ public class SaveItemStats : MonoBehaviour
                 Debug.Log("Nie można załadować: " + i.name);
             }
         }
-        foreach (Item i in storageTwo.items)
+        foreach (Item i in backpack.items)
         {
             if (i.pathToPrefab != null)
             {
@@ -255,15 +268,16 @@ class Player
 {
     [SerializeField] public float health;
     [SerializeField] public float mana;
-    [SerializeField] public List<Item> items = new List<Item>();
+    [SerializeField] public List<Item> controllerLeft = new List<Item>();
+    [SerializeField] public List<Item> controllerRight = new List<Item>();
+    [SerializeField] public List<Item> waistLeft = new List<Item>();
+    [SerializeField] public List<Item> waistBack = new List<Item>();
+    [SerializeField] public List<Item> waistRight = new List<Item>();
+    [SerializeField] public List<Item> legRight = new List<Item>();
+    [SerializeField] public List<Item> legLeft = new List<Item>();
 }
 [System.Serializable]
-class Ground
-{
-    [SerializeField] public List<Item> items = new List<Item>();
-}
-[System.Serializable]
-class Storage
+class ItemList
 {
     [SerializeField] public List<Item> items = new List<Item>();
 }
