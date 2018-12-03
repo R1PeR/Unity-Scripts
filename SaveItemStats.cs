@@ -55,7 +55,7 @@ public class SaveItemStats : MonoBehaviour
     [SerializeField] private ItemList pouch;
     [SerializeField] private ItemList backpack;
     [SerializeField] private GameObjectWithPath gameObjectPath = new GameObjectWithPath();
-    public string tagToSave = "Item";
+    public List<string> tagsToSave;
     public Transform transformControllerLeft;
     public Transform transformControllerRight;
     public Transform transformWaistLeft;
@@ -65,7 +65,9 @@ public class SaveItemStats : MonoBehaviour
     public Transform transformLegRight;
     public Transform transformPouch;
     public Transform transformBackpack;
-    private GameObject[] inScene;  
+    private List<GameObject> inScene;
+    private List<GameObject> tempScene;
+    private PouchScripts ps;
     private readonly string FILE_NAME_PLAYER = "playeritems.json";
     private readonly string FILE_NAME_GROUND = "levelitems.json";
     private readonly string FILE_NAME_POUCH = "pouchitems.json";
@@ -97,17 +99,19 @@ public class SaveItemStats : MonoBehaviour
 #endregion
     public void Save() {
 #if UNITY_EDITOR
-        if(transformWaistLeft == null || transformPouch == null || transformBackpack == null)
+        if(transformPouch == null || transformBackpack == null)
         {
             throw new System.NullReferenceException("Weź no przypisz te transformy :'(");
         }
 #endif
 #if UNITY_EDITOR
-        if (tagToSave == null || tagToSave == "")
+        if (tagsToSave == null)
         {
             throw new System.NullReferenceException("Weź no przypisz tag do zapisywania :'(");
         }
 #endif
+        ps = transformPouch.GetComponent<PouchScripts>();
+
         //sw.Reset();
         //sw.Start();
         idOfItem = 0;
@@ -131,6 +135,7 @@ public class SaveItemStats : MonoBehaviour
     }
     public void Load()
     {
+        ps = transformPouch.GetComponent<PouchScripts>();
         //sw.Reset();
         //sw.Start();
         GetItems();
@@ -143,10 +148,15 @@ public class SaveItemStats : MonoBehaviour
         //textOutput.text = "Load time: " + sw.Elapsed.Milliseconds + "ms";
     }
     void RespawnItems() {
-        foreach (GameObject g in GameObject.FindGameObjectsWithTag(tagToSave))
+        tempScene = new List<GameObject>();
+        foreach (string s in tagsToSave)
+        {
+            tempScene.AddRange(GameObject.FindGameObjectsWithTag(s));
+        }
+        foreach (GameObject g in tempScene)
         {
             try {
-                Destroy(g);
+                DestroyImmediate(g);
             }
             catch
             {
@@ -171,24 +181,8 @@ public class SaveItemStats : MonoBehaviour
                 Debug.Log("Nie można załadować: " + i.name);
             }
         }
-        foreach (Item i in pouch.items)
-        {
-            if (i.pathToPrefab != null)
-            {
-                if (i.parent == "null")
-                {
-                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation);
-                }
-                else
-                {
-                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
-                }
-            }
-            else
-            {
-                Debug.Log("Nie można załadować: " + i.name);
-            }
-        }
+        ps.BakePouch();
+        ps.AddItems(pouch.items);
         foreach (Item i in backpack.items)
         {
             if (i.pathToPrefab != null)
@@ -213,7 +207,12 @@ public class SaveItemStats : MonoBehaviour
         player.mana = mana;
     }
     void GetItems() {
-        inScene = GameObject.FindGameObjectsWithTag(tagToSave);
+        inScene = new List<GameObject>();
+        foreach (string s in tagsToSave)
+        {
+            inScene.AddRange(GameObject.FindGameObjectsWithTag(s));
+        }
+        //inScene = GameObject.FindGameObjectsWithTag(tagsToSave);
     }
     void AddItems (List<Item> list, Transform parent = null) {
 #if UNITY_EDITOR
@@ -282,7 +281,7 @@ class ItemList
     [SerializeField] public List<Item> items = new List<Item>();
 }
 [System.Serializable]
-class Item
+public class Item
 {
     [SerializeField] public string name;
     [SerializeField] public int id;
