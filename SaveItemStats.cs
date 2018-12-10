@@ -67,7 +67,7 @@ public class SaveItemStats : MonoBehaviour
     public Transform transformBackpack;
     private List<GameObject> inScene;
     private List<GameObject> tempScene;
-    private PouchScripts ps;
+    private StorageScript ps;
     private readonly string FILE_NAME_PLAYER = "playeritems.json";
     private readonly string FILE_NAME_GROUND = "levelitems.json";
     private readonly string FILE_NAME_POUCH = "pouchitems.json";
@@ -110,8 +110,8 @@ public class SaveItemStats : MonoBehaviour
             throw new System.NullReferenceException("Weź no przypisz tag do zapisywania :'(");
         }
 #endif
-        ps = transformPouch.GetComponent<PouchScripts>();
-
+        ps = transformPouch.GetComponent<StorageScript>();
+        ps.ClearNotParent();
         //sw.Reset();
         //sw.Start();
         idOfItem = 0;
@@ -135,7 +135,7 @@ public class SaveItemStats : MonoBehaviour
     }
     public void Load()
     {
-        ps = transformPouch.GetComponent<PouchScripts>();
+        ps = transformPouch.GetComponent<StorageScript>();
         //sw.Reset();
         //sw.Start();
         GetItems();
@@ -212,7 +212,6 @@ public class SaveItemStats : MonoBehaviour
         {
             inScene.AddRange(GameObject.FindGameObjectsWithTag(s));
         }
-        //inScene = GameObject.FindGameObjectsWithTag(tagsToSave);
     }
     void AddItems (List<Item> list, Transform parent = null) {
 #if UNITY_EDITOR
