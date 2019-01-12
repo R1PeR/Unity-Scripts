@@ -3,6 +3,7 @@ using System.IO;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using SerializableCollections;
 
 /* Jak używać:
@@ -68,10 +69,11 @@ public class SaveItemStats : MonoBehaviour
     private List<GameObject> inScene;
     private List<GameObject> tempScene;
     private StorageScript ps;
-    private readonly string FILE_NAME_PLAYER = "playeritems.json";
-    private readonly string FILE_NAME_GROUND = "levelitems.json";
-    private readonly string FILE_NAME_POUCH = "pouchitems.json";
-    private readonly string FILE_NAME_BACKPACK = "backpackitems.json";
+    private readonly string FILETYPE = ".json";
+    private readonly string FILE_NAME_PLAYER = "playeritems";
+    private readonly string FILE_NAME_GROUND = "levelitems";
+    private readonly string FILE_NAME_POUCH = "pouchitems";
+    private readonly string FILE_NAME_BACKPACK = "backpackitems";
     //System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
     private int idOfItem = 0;
     private float time;
@@ -126,10 +128,10 @@ public class SaveItemStats : MonoBehaviour
         AddItems(ground.items);
         AddItems(pouch.items, transformPouch);
         AddItems(backpack.items, transformBackpack);
-        WriteToFile(JsonUtility.ToJson(player), FILE_NAME_PLAYER);
-        WriteToFile(JsonUtility.ToJson(ground), FILE_NAME_GROUND);
-        WriteToFile(JsonUtility.ToJson(pouch), FILE_NAME_POUCH);
-        WriteToFile(JsonUtility.ToJson(backpack), FILE_NAME_BACKPACK);
+        WriteToFile(JsonUtility.ToJson(player), FILE_NAME_PLAYER + FILETYPE);
+        WriteToFile(JsonUtility.ToJson(ground), FILE_NAME_GROUND + "_" +SceneManager.GetActiveScene() + FILETYPE);
+        WriteToFile(JsonUtility.ToJson(pouch), FILE_NAME_POUCH + FILETYPE);
+        WriteToFile(JsonUtility.ToJson(backpack), FILE_NAME_BACKPACK + FILETYPE);
         //sw.Stop();
         //textOutput.text = "Save time: " + sw.Elapsed.Milliseconds + "ms";
     }
@@ -139,10 +141,10 @@ public class SaveItemStats : MonoBehaviour
         //sw.Reset();
         //sw.Start();
         GetItems();
-        player = JsonUtility.FromJson<Player>(ReadFromFile(FILE_NAME_PLAYER));
-        ground = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_GROUND));
-        pouch = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_POUCH));
-        backpack = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_BACKPACK));
+        player = JsonUtility.FromJson<Player>(ReadFromFile(FILE_NAME_PLAYER+FILETYPE));
+        ground = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_GROUND + "_" + SceneManager.GetActiveScene()+FILETYPE));
+        pouch = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_POUCH + FILETYPE));
+        backpack = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_BACKPACK + FILETYPE));
         RespawnItems();
         //sw.Stop();
         //textOutput.text = "Load time: " + sw.Elapsed.Milliseconds + "ms";
