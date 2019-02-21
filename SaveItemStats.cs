@@ -5,7 +5,6 @@ using UnityEditor;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using SerializableCollections;
-
 /* Jak używać:
  * Dodaj na obiekt, który jest w każdej scenie, testowane na kamerze
  * Save() - Automatycznie zapisuje każdy przedmiot z tagiem tagToSave
@@ -55,6 +54,7 @@ public class SaveItemStats : MonoBehaviour
     [SerializeField] private ItemList ground;
     [SerializeField] private ItemList pouch;
     [SerializeField] private ItemList backpack;
+    [SerializeField] private ItemList chest;
     [SerializeField] private GameObjectWithPath gameObjectPath = new GameObjectWithPath();
     public List<string> tagsToSave;
     public Transform transformControllerLeft;
@@ -66,14 +66,19 @@ public class SaveItemStats : MonoBehaviour
     public Transform transformLegRight;
     public Transform transformPouch;
     public Transform transformBackpack;
+    public string tagChest;
+    public bool saveOnlyOnGround = false;
     private List<GameObject> inScene;
     private List<GameObject> tempScene;
     private StorageScript ps;
+    private StorageScript ch;
+    private GameObject chestGameObject;
     private readonly string FILETYPE = ".json";
     private readonly string FILE_NAME_PLAYER = "playeritems";
     private readonly string FILE_NAME_GROUND = "levelitems";
     private readonly string FILE_NAME_POUCH = "pouchitems";
     private readonly string FILE_NAME_BACKPACK = "backpackitems";
+    private readonly string FILE_NAME_CHEST = "chestitems";
     //System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
     private int idOfItem = 0;
     private float time;
@@ -90,7 +95,14 @@ public class SaveItemStats : MonoBehaviour
         {
             Object parentObject = PrefabUtility.FindPrefabRoot(g);
             string path = AssetDatabase.GetAssetPath(parentObject);
-            gameObjectPath.Add(g.name, path.Replace("Assets/Resources/", "").Replace(".prefab", ""));
+            try
+            {
+                gameObjectPath.Add(g.name, path.Replace("Assets/Resources/", "").Replace(".prefab", ""));
+            }
+            catch (System.ArgumentException e)
+            {
+                Debug.Log(g.name +"| |"+ e.Message);
+            }
         }
     }
     public void DeleteDatabase()
@@ -101,7 +113,7 @@ public class SaveItemStats : MonoBehaviour
 #endregion
     public void Save() {
 #if UNITY_EDITOR
-        if(transformPouch == null || transformBackpack == null)
+        if((transformPouch == null || transformBackpack == null) && !saveOnlyOnGround)
         {
             throw new System.NullReferenceException("Weź no przypisz te transformy :'(");
         }
@@ -112,39 +124,65 @@ public class SaveItemStats : MonoBehaviour
             throw new System.NullReferenceException("Weź no przypisz tag do zapisywania :'(");
         }
 #endif
-        ps = transformPouch.GetComponent<StorageScript>();
-        ps.ClearNotParent();
+        if (!saveOnlyOnGround)
+        {
+            ps = transformPouch.GetComponent<StorageScript>();
+            ps.ClearNotParent();
+        }
+        chestGameObject = GameObject.FindGameObjectWithTag(tagChest);
+        if (chestGameObject != null)
+        {
+            ch = chestGameObject.transform.GetComponent<StorageScript>();
+            ch.ClearNotParent();
+        }
         //sw.Reset();
         //sw.Start();
         idOfItem = 0;
         GetItems();
-        AddItems(player.controllerLeft,transformControllerLeft);
-        AddItems(player.controllerRight, transformControllerRight);
-        AddItems(player.waistRight, transformWaistRight);
-        AddItems(player.waistBack, transformWaistBack);
-        AddItems(player.waistLeft, transformWaistLeft);
-        AddItems(player.legRight, transformLegRight);
-        AddItems(player.legLeft, transformLegLeft);
+        if (!saveOnlyOnGround)
+        {
+            AddItems(player.controllerLeft, transformControllerLeft);
+            AddItems(player.controllerRight, transformControllerRight);
+            AddItems(player.waistRight, transformWaistRight);
+            AddItems(player.waistBack, transformWaistBack);
+            AddItems(player.waistLeft, transformWaistLeft);
+            AddItems(player.legRight, transformLegRight);
+            AddItems(player.legLeft, transformLegLeft);
+            AddItems(pouch.items, transformPouch);
+            AddItems(backpack.items, transformBackpack.transform);
+            if (chestGameObject.transform != null)
+            {
+                AddItems(chest.items, chestGameObject.transform);
+            }
+        }
         AddItems(ground.items);
-        AddItems(pouch.items, transformPouch);
-        AddItems(backpack.items, transformBackpack);
-        WriteToFile(JsonUtility.ToJson(player), FILE_NAME_PLAYER + FILETYPE);
+        if (!saveOnlyOnGround)
+        {
+            WriteToFile(JsonUtility.ToJson(pouch), FILE_NAME_POUCH + FILETYPE);
+            WriteToFile(JsonUtility.ToJson(backpack), FILE_NAME_BACKPACK + FILETYPE);
+            WriteToFile(JsonUtility.ToJson(player), FILE_NAME_PLAYER + FILETYPE);
+        }
+        if(chestGameObject.transform != null)
+        {
+            WriteToFile(JsonUtility.ToJson(chest), FILE_NAME_CHEST + FILETYPE);
+        }
         WriteToFile(JsonUtility.ToJson(ground), FILE_NAME_GROUND + "_" +SceneManager.GetActiveScene() + FILETYPE);
-        WriteToFile(JsonUtility.ToJson(pouch), FILE_NAME_POUCH + FILETYPE);
-        WriteToFile(JsonUtility.ToJson(backpack), FILE_NAME_BACKPACK + FILETYPE);
         //sw.Stop();
         //textOutput.text = "Save time: " + sw.Elapsed.Milliseconds + "ms";
     }
     public void Load()
     {
-        ps = transformPouch.GetComponent<StorageScript>();
         //sw.Reset();
         //sw.Start();
         GetItems();
-        player = JsonUtility.FromJson<Player>(ReadFromFile(FILE_NAME_PLAYER+FILETYPE));
+        if (!saveOnlyOnGround)
+        {
+            player = JsonUtility.FromJson<Player>(ReadFromFile(FILE_NAME_PLAYER + FILETYPE));
+            pouch = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_POUCH + FILETYPE));
+            backpack = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_BACKPACK + FILETYPE));
+            chest = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_CHEST + FILETYPE));
+        }
         ground = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_GROUND + "_" + SceneManager.GetActiveScene()+FILETYPE));
-        pouch = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_POUCH + FILETYPE));
-        backpack = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_BACKPACK + FILETYPE));
         RespawnItems();
         //sw.Stop();
         //textOutput.text = "Load time: " + sw.Elapsed.Milliseconds + "ms";
@@ -171,11 +209,12 @@ public class SaveItemStats : MonoBehaviour
             {
                 if(i.parent == "null")
                 {
-                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab","")), i.position, i.rotation);
+                    Debug.Log(i.pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", ""));
+                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", "").Replace(".prefab","")), i.position, i.rotation);
                 }
                 else
                 {
-                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
+                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonClawler/assets/resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
                 }
             }
             else
@@ -183,24 +222,35 @@ public class SaveItemStats : MonoBehaviour
                 Debug.Log("Nie można załadować: " + i.name);
             }
         }
-        ps.BakePouch();
-        ps.AddItems(pouch.items);
-        foreach (Item i in backpack.items)
+        if (!saveOnlyOnGround)
         {
-            if (i.pathToPrefab != null)
+            ps = transformPouch.GetComponent<StorageScript>();
+            ps.BakePouch();
+            ps.AddItems(pouch.items);
+            foreach (Item i in backpack.items)
             {
-                if (i.parent == "null")
+                if (i.pathToPrefab != null)
                 {
-                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation);
+                    if (i.parent == "null")
+                    {
+                        Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation);
+                    }
+                    else
+                    {
+                        Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
+                    }
                 }
                 else
                 {
-                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
+                    Debug.Log("Nie można załadować: " + i.name);
                 }
             }
-            else
+            chestGameObject = GameObject.FindGameObjectWithTag(tagChest);
+            if (chestGameObject != null)
             {
-                Debug.Log("Nie można załadować: " + i.name);
+                ch = chestGameObject.transform.GetComponent<StorageScript>();
+                ch.BakePouch();
+                ch.AddItems(chest.items);
             }
         }
     }
