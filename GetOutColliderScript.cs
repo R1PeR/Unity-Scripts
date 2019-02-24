@@ -6,10 +6,10 @@ using UnityEngine;
  * Sprawdza czy kolizja równa "Hand" i jak tak to zmienia parent na collider
  */
 public class GetOutColliderScript : MonoBehaviour {
-    
+    public string tagToCheck;
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.tag == "Hand")
+        if(collision.gameObject.tag == tagToCheck)
         {
             transform.parent = collision.gameObject.transform;
         }
