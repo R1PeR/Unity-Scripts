@@ -9,7 +9,13 @@ using SerializableCollections;
  * Dodaj na obiekt, który jest w każdej scenie, testowane na kamerze
  * Save() - Automatycznie zapisuje każdy przedmiot z tagiem tagToSave
  * Load() - Automatycznie ładuje przedmioty zapisane w jsonie
- * Przed zapisaniem użyć BuildGameobjectDatabase() by zbudować baze danych prefabów do ładowania
+ * 
+ * Jak zrobić żeby działało:
+ * 1. Dodaj ten skrypt na kamere, albo jakiś obiekt, który będzie w każdej scenie
+ * 2. Aby skrzynka, plecak i sakwa działały dodaj na w/w skrypt StorageScript.
+ * 3. Aby można było dodawać do plecaka/skrzynki/sakwy dodaj objekt z skryptem PutInColliderScript.
+ * 
+ * Przed zapisaniem użyć BuildGameobjectDatabase() (w inspektorze masz przycisk) by zbudować baze danych prefabów do ładowania, inaczej wszystko usunie i dupa :/
  * AddHealthAndMana(float health, float mana) - Dodaj zycie i mana do zapisania, weź to podepnij bo mi się nie chce :)
  * Wszystko zakomentowane to mierzenie czasu zapisu i odczytu
  */
