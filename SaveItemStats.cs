@@ -209,7 +209,7 @@ public class SaveItemStats : MonoBehaviour
             }
             else
             {
-                return Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonClawler/assets/resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
+                return Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
             }
 
         }
@@ -241,8 +241,7 @@ public class SaveItemStats : MonoBehaviour
         foreach (Item i in ground.items)
         {
             RespawnItem(i);
-        }
-        
+        }  
         if (!saveOnlyOnGround)
         {
             //
