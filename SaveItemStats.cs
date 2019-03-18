@@ -193,6 +193,35 @@ public class SaveItemStats : MonoBehaviour
         //sw.Stop();
         //textOutput.text = "Load time: " + sw.Elapsed.Milliseconds + "ms";
     }
+    /// <summary>
+    /// Respawnuje jeden konkretny item i, funkcja po prostu by zastąpić powtarzanie kodu
+    /// </summary>
+    /// <param name="i"></param>
+    /// <returns>Item i który zostanie zrespawnowany</returns>
+    bool RespawnItem(Item i)
+    {
+        if (i.pathToPrefab != null)
+        {
+            if (i.parent == "null")
+            {
+                //Debug.Log(i.pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", ""));
+                return Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", "").Replace(".prefab", "")), i.position, i.rotation);
+            }
+            else
+            {
+                return Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonClawler/assets/resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
+            }
+
+        }
+        else
+        {
+            //Debug.Log("Nie można załadować: " + i.name);
+            return false;
+        }
+    }
+    /// <summary>
+    /// Respawnuje wszystkie itemy z iterowanych arrayów
+    /// </summary>
     void RespawnItems() {
         tempScene = new List<GameObject>();
         foreach (string s in tagsToSave)
@@ -211,45 +240,47 @@ public class SaveItemStats : MonoBehaviour
         }
         foreach (Item i in ground.items)
         {
-            if(i.pathToPrefab != null)
-            {
-                if(i.parent == "null")
-                {
-                    Debug.Log(i.pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", ""));
-                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", "").Replace(".prefab","")), i.position, i.rotation);
-                }
-                else
-                {
-                    Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonClawler/assets/resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
-                }
-            }
-            else
-            {
-                Debug.Log("Nie można załadować: " + i.name);
-            }
+            RespawnItem(i);
         }
+        
         if (!saveOnlyOnGround)
         {
+            //
+            foreach (Item i in player.controllerLeft)
+            {
+                RespawnItem(i);
+            }
+            foreach (Item i in player.controllerRight)
+            {
+                RespawnItem(i);
+            }
+            foreach (Item i in player.legLeft)
+            {
+                RespawnItem(i);
+            }
+            foreach (Item i in player.legRight)
+            {
+                RespawnItem(i);
+            }
+            foreach (Item i in player.waistBack)
+            {
+                RespawnItem(i);
+            }
+            foreach (Item i in player.waistLeft)
+            {
+                RespawnItem(i);
+            }
+            foreach (Item i in player.waistRight)
+            {
+                RespawnItem(i);
+            }
+            //
             ps = transformPouch.GetComponent<StorageScript>();
             ps.BakePouch();
             ps.AddItems(pouch.items);
             foreach (Item i in backpack.items)
             {
-                if (i.pathToPrefab != null)
-                {
-                    if (i.parent == "null")
-                    {
-                        Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation);
-                    }
-                    else
-                    {
-                        Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
-                    }
-                }
-                else
-                {
-                    Debug.Log("Nie można załadować: " + i.name);
-                }
+                RespawnItem(i);
             }
             chestGameObject = GameObject.FindGameObjectWithTag(tagChest);
             if (chestGameObject != null)
