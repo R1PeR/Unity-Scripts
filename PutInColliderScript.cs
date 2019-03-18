@@ -13,7 +13,16 @@ public class PutInColliderScript : MonoBehaviour {
     {
         if (IsOneOfTag(other.gameObject.tag, tagsToSave))
         {
-            ps = transform.parent.GetComponent<StorageScript>();
+            if(other.GetComponentInParent<StorageScript>())
+            {
+                return;
+            }
+
+            if(other.transform.parent != null)
+            {
+                return;
+            }
+            ps = transform.GetComponent<StorageScript>();
             ps.AddItem(other.gameObject);
             Destroy(other.gameObject);
         }

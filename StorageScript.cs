@@ -87,7 +87,7 @@ public class StorageScript : MonoBehaviour {
                 places[i,j] = null;
                 if (k < listOfItems.Count && listOfItems[k].pathToPrefab != null)
                 {
-                    places[i,j] = Instantiate(Resources.Load<GameObject>(listOfItems[k].pathToPrefab.Replace("Assets/Resources/", "").Replace(".prefab", "")), listOfItems[k].position, listOfItems[k].rotation, this.transform);               
+                    places[i,j] = Instantiate(Resources.Load<GameObject>(listOfItems[k].pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", "").Replace(".prefab", "")), listOfItems[k].position, listOfItems[k].rotation, this.transform);               
                     places[i,j].transform.parent = this.transform;
                     places[i,j].transform.localPosition = new Vector3((i * distanceBetween) - (((rows - 1) * distanceBetween) / 2.0f), 0, (j * distanceBetween) - (((columns - 1) * distanceBetween) / 2.0f));                
                 }

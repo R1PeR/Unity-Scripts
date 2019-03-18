@@ -91,7 +91,7 @@ public class SaveItemStats : MonoBehaviour
     //public Text textOutput;
     private string text;
 
-#region Editor
+    #region Editor
 #if UNITY_EDITOR
     public void BuildGameobjectDatabase()
     {
@@ -107,7 +107,7 @@ public class SaveItemStats : MonoBehaviour
             }
             catch (System.ArgumentException e)
             {
-                Debug.Log(g.name +"| |"+ e.Message);
+                Debug.Log(g.name + "| |" + e.Message);
             }
         }
     }
@@ -116,10 +116,12 @@ public class SaveItemStats : MonoBehaviour
         gameObjectPath.Clear();
     }
 #endif
-#endregion
-    public void Save() {
+    #endregion
+    public void Save()
+    {
+        /*
 #if UNITY_EDITOR
-        if((transformPouch == null || transformBackpack == null) && !saveOnlyOnGround)
+        if ((transformPouch == null || transformBackpack == null) && !saveOnlyOnGround)
         {
             throw new System.NullReferenceException("Weź no przypisz te transformy :'(");
         }
@@ -134,13 +136,14 @@ public class SaveItemStats : MonoBehaviour
         {
             ps = transformPouch.GetComponent<StorageScript>();
             ps.ClearNotParent();
-        }
+        }*/
         chestGameObject = GameObject.FindGameObjectWithTag(tagChest);
         if (chestGameObject != null)
         {
             ch = chestGameObject.transform.GetComponent<StorageScript>();
             ch.ClearNotParent();
         }
+        
         //sw.Reset();
         //sw.Start();
         idOfItem = 0;
@@ -154,9 +157,9 @@ public class SaveItemStats : MonoBehaviour
             AddItems(player.waistLeft, transformWaistLeft);
             AddItems(player.legRight, transformLegRight);
             AddItems(player.legLeft, transformLegLeft);
-            AddItems(pouch.items, transformPouch);
-            AddItems(backpack.items, transformBackpack.transform);
-            if (chestGameObject.transform != null)
+            //AddItems(pouch.items, transformPouch);
+            //AddItems(backpack.items, transformBackpack.transform);
+            if (chestGameObject != null)
             {
                 AddItems(chest.items, chestGameObject.transform);
             }
@@ -164,15 +167,15 @@ public class SaveItemStats : MonoBehaviour
         AddItems(ground.items);
         if (!saveOnlyOnGround)
         {
-            WriteToFile(JsonUtility.ToJson(pouch), FILE_NAME_POUCH + FILETYPE);
-            WriteToFile(JsonUtility.ToJson(backpack), FILE_NAME_BACKPACK + FILETYPE);
+            //WriteToFile(JsonUtility.ToJson(pouch), FILE_NAME_POUCH + FILETYPE);
+            //WriteToFile(JsonUtility.ToJson(backpack), FILE_NAME_BACKPACK + FILETYPE);
             WriteToFile(JsonUtility.ToJson(player), FILE_NAME_PLAYER + FILETYPE);
         }
-        if(chestGameObject.transform != null)
+        if (chestGameObject != null)
         {
             WriteToFile(JsonUtility.ToJson(chest), FILE_NAME_CHEST + FILETYPE);
         }
-        WriteToFile(JsonUtility.ToJson(ground), FILE_NAME_GROUND + "_" +SceneManager.GetActiveScene() + FILETYPE);
+        WriteToFile(JsonUtility.ToJson(ground), FILE_NAME_GROUND + "_" + SceneManager.GetActiveScene() + FILETYPE);
         //sw.Stop();
         //textOutput.text = "Save time: " + sw.Elapsed.Milliseconds + "ms";
     }
@@ -184,11 +187,11 @@ public class SaveItemStats : MonoBehaviour
         if (!saveOnlyOnGround)
         {
             player = JsonUtility.FromJson<Player>(ReadFromFile(FILE_NAME_PLAYER + FILETYPE));
-            pouch = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_POUCH + FILETYPE));
-            backpack = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_BACKPACK + FILETYPE));
+            //pouch = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_POUCH + FILETYPE));
+            //backpack = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_BACKPACK + FILETYPE));
             chest = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_CHEST + FILETYPE));
         }
-        ground = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_GROUND + "_" + SceneManager.GetActiveScene()+FILETYPE));
+        ground = JsonUtility.FromJson<ItemList>(ReadFromFile(FILE_NAME_GROUND + "_" + SceneManager.GetActiveScene() + FILETYPE));
         RespawnItems();
         //sw.Stop();
         //textOutput.text = "Load time: " + sw.Elapsed.Milliseconds + "ms";
@@ -209,7 +212,9 @@ public class SaveItemStats : MonoBehaviour
             }
             else
             {
-                return Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
+                GameObject obj = Instantiate(Resources.Load<GameObject>(i.pathToPrefab.Replace("Assets/DungeonCrawler/assets/resources/", "").Replace(".prefab", "")), i.position, i.rotation, GameObject.Find(i.parent).transform);
+                obj.transform.localPosition = i.position;
+                return true;
             }
 
         }
@@ -222,7 +227,8 @@ public class SaveItemStats : MonoBehaviour
     /// <summary>
     /// Respawnuje wszystkie itemy z iterowanych arrayów
     /// </summary>
-    void RespawnItems() {
+    void RespawnItems()
+    {
         tempScene = new List<GameObject>();
         foreach (string s in tagsToSave)
         {
@@ -230,57 +236,67 @@ public class SaveItemStats : MonoBehaviour
         }
         foreach (GameObject g in tempScene)
         {
-            try {
+            try
+            {
                 DestroyImmediate(g);
             }
             catch
             {
                 Debug.Log("Nie można usunąć obiektu, może już nie istnieć");
-            }        
+            }
         }
         foreach (Item i in ground.items)
         {
             RespawnItem(i);
-        }  
+        }
+
         if (!saveOnlyOnGround)
         {
             //
             foreach (Item i in player.controllerLeft)
             {
                 RespawnItem(i);
+                
+                transformControllerLeft.gameObject.GetComponent<ObjectPickup>().PickUpObj();
             }
             foreach (Item i in player.controllerRight)
             {
                 RespawnItem(i);
+                transformControllerRight.gameObject.GetComponent<ObjectPickup>().PickUpObj();
             }
             foreach (Item i in player.legLeft)
             {
+                transformLegLeft.gameObject.GetComponent<weapon_holder>().free = true;
                 RespawnItem(i);
             }
             foreach (Item i in player.legRight)
             {
+                transformLegRight.gameObject.GetComponent<weapon_holder>().free = true;
                 RespawnItem(i);
             }
             foreach (Item i in player.waistBack)
             {
+                transformWaistBack.gameObject.GetComponent<weapon_holder>().free = true;
                 RespawnItem(i);
             }
             foreach (Item i in player.waistLeft)
             {
+                transformWaistLeft.gameObject.GetComponent<weapon_holder>().free = true;
                 RespawnItem(i);
             }
             foreach (Item i in player.waistRight)
             {
+                transformWaistRight.gameObject.GetComponent<weapon_holder>().free = true;
                 RespawnItem(i);
             }
             //
-            ps = transformPouch.GetComponent<StorageScript>();
+            /*ps = transformPouch.GetComponent<StorageScript>();
             ps.BakePouch();
             ps.AddItems(pouch.items);
             foreach (Item i in backpack.items)
             {
                 RespawnItem(i);
-            }
+            } */
             chestGameObject = GameObject.FindGameObjectWithTag(tagChest);
             if (chestGameObject != null)
             {
@@ -288,22 +304,26 @@ public class SaveItemStats : MonoBehaviour
                 ch.BakePouch();
                 ch.AddItems(chest.items);
             }
+            
         }
     }
-    public void AddHealthAndMana(float health, float mana) {
+    public void AddHealthAndMana(float health, float mana)
+    {
         player.health = health;
         player.mana = mana;
     }
-    void GetItems() {
+    void GetItems()
+    {
         inScene = new List<GameObject>();
         foreach (string s in tagsToSave)
         {
             inScene.AddRange(GameObject.FindGameObjectsWithTag(s));
         }
     }
-    void AddItems (List<Item> list, Transform parent = null) {
+    void AddItems(List<Item> list, Transform parent = null)
+    {
 #if UNITY_EDITOR
-        if(gameObjectPath.Count == 0 || gameObjectPath == null)
+        if (gameObjectPath.Count == 0 || gameObjectPath == null)
         {
             throw new System.NullReferenceException("Weź no zbuduj tą baze danych :'(");
         }
@@ -316,21 +336,21 @@ public class SaveItemStats : MonoBehaviour
             if (g.transform.parent == parent)
             {
                 index = g.name.IndexOf("(");
-                if(index > 0)
+                if (index > 0)
                 {
-                    gameObjectPath.TryGetValue(g.name.Remove(index).Replace(" ",""), out path);
+                    gameObjectPath.TryGetValue(g.name.Remove(index).Replace(" ", ""), out path);
                 }
                 else
                 {
                     gameObjectPath.TryGetValue(g.name.Replace(" ", ""), out path);
-                }                
+                }
                 if (parent == null)
                 {
                     list.Add(new Item(g.name, idOfItem++, g.transform.position, g.transform.rotation, "null", path));
                 }
                 else
                 {
-                    list.Add(new Item(g.name, idOfItem++, g.transform.position, g.transform.rotation, g.transform.parent.name, path));
+                    list.Add(new Item(g.name, idOfItem++, g.transform.localPosition, g.transform.rotation, g.transform.parent.name, path));
                 }
             }
         }
@@ -344,7 +364,8 @@ public class SaveItemStats : MonoBehaviour
         }
         File.WriteAllText(filename, json);
     }
-    string ReadFromFile(string fileName) {
+    string ReadFromFile(string fileName)
+    {
         string filename = Path.Combine(Application.persistentDataPath, fileName);
         return File.ReadAllText(filename);
     }
