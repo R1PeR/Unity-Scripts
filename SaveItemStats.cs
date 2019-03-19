@@ -355,6 +355,26 @@ public class SaveItemStats : MonoBehaviour
             }
         }
     }
+    public void AddItemToPouch(GameObject g, Transform parent)
+    {
+#if UNITY_EDITOR
+        if (gameObjectPath.Count == 0 || gameObjectPath == null)
+        {
+            throw new System.NullReferenceException("Weź no zbuduj tą baze danych :'(");
+        }
+#endif
+        string path = "none";
+        int index = g.name.IndexOf("(");
+        if (index > 0)
+        {
+            gameObjectPath.TryGetValue(g.name.Remove(index).Replace(" ", ""), out path);
+        }
+        else
+        {
+            gameObjectPath.TryGetValue(g.name.Replace(" ", ""), out path);
+        }
+        pouch.items.Add(new Item(g.name, idOfItem++, g.transform.localPosition, g.transform.rotation, g.transform.parent.name, path));
+    }
     void WriteToFile(string json, string fileName)
     {
         string filename = Path.Combine(Application.persistentDataPath, fileName);
