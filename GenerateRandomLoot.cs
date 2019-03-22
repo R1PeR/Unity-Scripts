@@ -24,28 +24,37 @@ public class GenerateRandomLoot : MonoBehaviour
     public Transform lootPresetTransform;
     private LootPresets lootPresets;
     public int listIndex;
+    private ItemPreset list;
     public List<GameObject> generated;
     public int amountToGenerate;
+    public bool addObligatoryItems;
     public void Start()
     {
         lootPresets = lootPresetTransform.GetComponent<LootPresets>();
+        list = lootPresets.listItemPresets[listIndex];
     }
     public void Loot()
     {
-        generated = GenerateLoot(amountToGenerate);
+        generated = GenerateLoot(amountToGenerate, addObligatoryItems);
     }
-    public List<GameObject> GenerateLoot(int amount)
+    public List<GameObject> GenerateLoot(int amount, bool addObligatory)
     {
-        List<GameObject> list = new List<GameObject>();
+        List<GameObject> listReturn = new List<GameObject>();
         for(int i = 0; i < amount; i++)
         {
-            list.Add(GenerateItem(listIndex));
+            listReturn.Add(GenerateItem());
         }
-        return list;
+        if (addObligatory)
+        {
+            foreach (ObligatoryItemPreset preset in list.itemPresetsObligatory)
+            {
+                listReturn.Add(preset.gameobject);
+            }
+        }
+        return listReturn;
     }
-    public GameObject GenerateItem(int index)
+    public GameObject GenerateItem()
     {
-        ItemPreset list = lootPresets.listItemPresets[index];
         int range = 0;
         foreach(SingleItemPreset preset in list.itemPresets)
         {
