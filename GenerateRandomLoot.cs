@@ -36,6 +36,12 @@ public class GenerateRandomLoot : MonoBehaviour
     public void Loot()
     {
         generated = GenerateLoot(amountToGenerate, addObligatoryItems);
+        StorageScript sg = GetComponent<StorageScript>();
+        sg.BakePouch();
+        foreach(GameObject g in generated)
+        {
+            sg.AddItem(g);
+        }
     }
     public List<GameObject> GenerateLoot(int amount, bool addObligatory)
     {
@@ -58,9 +64,9 @@ public class GenerateRandomLoot : MonoBehaviour
         int range = 0;
         foreach(SingleItemPreset preset in list.itemPresets)
         {
-            range += preset.percentage;
+            range += preset.percentage; 
         }
-        int rand = Random.Range(0, 100);
+        int rand = Random.Range(0, range);
         int top = 0;
         foreach(SingleItemPreset preset in list.itemPresets)
         {
