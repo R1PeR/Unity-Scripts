@@ -32,6 +32,7 @@ public class GenerateRandomLoot : MonoBehaviour
     {
         lootPresets = lootPresetTransform.GetComponent<LootPresets>();
         list = lootPresets.listItemPresets[listIndex];
+        Loot();
     }
     public void Loot()
     {
