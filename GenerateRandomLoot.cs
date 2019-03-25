@@ -26,7 +26,7 @@ public class GenerateRandomLoot : MonoBehaviour
     public int listIndex;
     private ItemPreset list;
     public List<GameObject> generated;
-    public int amountToGenerate;
+    public int from, to;
     public bool addObligatoryItems;
     public void Start()
     {
@@ -36,7 +36,7 @@ public class GenerateRandomLoot : MonoBehaviour
     }
     public void Loot()
     {
-        generated = GenerateLoot(amountToGenerate, addObligatoryItems);
+        generated = GenerateLoot(Random.Range(from, to), addObligatoryItems);
         StorageScript sg = GetComponent<StorageScript>();
         sg.BakePouch();
         foreach(GameObject g in generated)
